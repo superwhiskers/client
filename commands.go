@@ -57,6 +57,19 @@ func listMessages(args []string) {
 		m = messages[len(messages)-1-i]
 
 		fmt.Printf("%s: %s\n", m.Author.String(), m.Content)
+		if len(m.Attachments) > 0 {
+
+			fmt.Printf("attachments (%d):\n", len(m.Attachments))
+
+			for _, a := range m.Attachments {
+
+				fmt.Printf("  %s: %s\n", a.Filename, a.URL)
+
+			}
+
+			fmt.Printf("\n")
+
+		}
 
 	}
 
