@@ -11,8 +11,10 @@ import (
 	// internals
 	"fmt"
 	"os"
+	"bufio"
+	"time"
+	"strings"
 	//"runtime"
-	"strconv"
 	//"sync"
 	"encoding/json"
 	"io/ioutil"
@@ -20,17 +22,20 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// variables that are used to perform the raids
 var (
-	servers  []*discordgo.UserGuild
-	server   *discordgo.UserGuild
+	servers  []*discordgo.Guild
+	server   *discordgo.Guild
 	channels []*discordgo.Channel
 	channel  *discordgo.Channel
+	user     *discordgo.User
 	dg       *discordgo.Session
+
 	err      error
+
+	reader = bufio.NewReader(os.Stdin)
 )
 
-// main func
+// main function
 func main() {
 
 	if _, err = os.Stat("config.json"); os.IsNotExist(err) {
@@ -89,6 +94,8 @@ func main() {
 
 	}
 
+	dg.AddHandler(onReady)
+
 	err = dg.Open()
 	if err != nil {
 
@@ -98,109 +105,86 @@ func main() {
 
 	}
 
-	servers, err = dg.UserGuilds(100, "", "")
-	if err != nil {
+	i := 0
+	fmt.Printf("waiting for ready event... %s", spinner[i])
+	for ready != true {
 
-		fmt.Printf("[err]: could not retrieve the guilds for the bot...\n")
-		fmt.Printf("       %v\n", err)
-		os.Exit(1)
+		i++
+		if i == len(spinner) {
 
-	}
-
-	for i, s := range servers {
-
-		fmt.Printf("%d: %s\n", i, s.Name)
-
-	}
-
-	serverIndStr := question("select a server", []string{})
-
-	serverIndInt, err := strconv.Atoi(serverIndStr)
-	if err != nil {
-
-		fmt.Printf("[err]: %s is not a number...\n", serverIndStr)
-		fmt.Printf("       %v\n", err)
-		os.Exit(1)
-
-	}
-
-	if len(servers) > serverIndInt && serverIndInt > -1 {
-
-		server = servers[serverIndInt]
-
-	} else {
-
-		fmt.Printf("[err]: %s is not in the server list...\n", serverIndStr)
-		os.Exit(1)
-
-	}
-
-	channelsRaw, err := dg.GuildChannels(server.ID)
-	if err != nil {
-
-		fmt.Printf("[err]: could not retrieve the channels of the selected server...\n")
-		fmt.Printf("       %v\n", err)
-		os.Exit(1)
-
-	}
-
-	channels = []*discordgo.Channel{}
-	for _, c := range channelsRaw {
-
-		if c.Type == discordgo.ChannelTypeGuildText {
-
-			channels = append(channels, c)
+			i = 0
 
 		}
 
+		time.Sleep(2 * time.Millisecond)
+		fmt.Printf("\rwaiting for ready event... %s", spinner[i])
+
 	}
 
-	var parentChannel *discordgo.Channel
-	for i, c := range channels {
+	fmt.Printf("\rwaiting for ready event... done\n")
 
-		if c.ParentID == "" {
+	_ = changeServer(true)
 
-			fmt.Printf("%d: %s\n", i, c.Name)
+	fmt.Printf("client.go | version one and a half alpha\n")
+	fmt.Printf("logged in as %s\n", user.String())
+
+	var (
+		command string
+		commandByte []byte
+		cmdSlice []string
+		args []string
+	)
+
+	for {
+
+		fmt.Printf(": ")
+		commandByte, _, err = reader.ReadLine()
+		if err != nil {
+
+			fmt.Printf("[err]: unable to read line... (continuing anyways)\n")
+			fmt.Printf("       %v\n", err)
+
+		}
+
+		command = string(commandByte)
+		cmdSlice = strings.Split(command, " ")
+
+		if len(cmdSlice) == 1 {
+
+			args = []string{}
 
 		} else {
 
-			parentChannel, err = dg.Channel(c.ParentID)
-			if err != nil {
+			args = cmdSlice[1:]
 
-				fmt.Printf("%d: %s\n", i, c.Name)
+		}
 
-			} else {
+		switch cmdSlice[0] {
 
-				fmt.Printf("%d: %s (%s)\n", i, c.Name, parentChannel.Name)
+		case "exit":
+			_ = dg.Close()
+			os.Exit(0)
 
-			}
+		case "ls":
+			listMessages(args)
+
+		//case "pwd":
+		//	listWorkingDirectory()
+
+		case "move-serv":
+			_ = changeServer(false)
+
+		case "move-chan":
+			_ = changeChannel(false)
+
+		case "help":
+			showHelp()
+
+		default:
+			fmt.Printf("unrecognized command: %s\n", cmdSlice[0])
 
 		}
 
 	}
-
-	chanIndStr := question("select a channel", []string{})
-
-	chanIndInt, err := strconv.Atoi(chanIndStr)
-	if err != nil {
-
-		fmt.Printf("[err]: %s is not a number...\n", chanIndStr)
-		fmt.Printf("       %v\n", err)
-		os.Exit(1)
-
-	}
-
-	if len(channels) > chanIndInt && chanIndInt > -1 {
-
-		channel = channels[chanIndInt]
-
-	} else {
-
-		fmt.Printf("[err]: %s is not in the channel list...\n", chanIndStr)
-		os.Exit(1)
-
-	}
-
-	fmt.Printf("you selected %s\n", channel.Name)
 
 }
