@@ -168,6 +168,9 @@ func main() {
 		case "ls":
 			listMessages(args)
 
+		case "send":
+			sendMessage()
+
 		//case "pwd":
 		//	listWorkingDirectory()
 

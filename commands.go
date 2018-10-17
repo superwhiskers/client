@@ -22,6 +22,44 @@ func showHelp() {
 
 }
 
+// sends message(s)
+func sendMessage() {
+
+	var content string
+	for {
+
+		content = question(fmt.Sprintf("what would you like to say in #%s?\n(type ^^exit to exit, ^^help to show help)", channel.Name), []string{})
+
+		switch content {
+
+		case "^^help":
+			fmt.Printf(sendHelpMessage)
+
+		case "^^exit":
+			return
+
+		case "^^ls":
+			listMessages([]string{"5"})
+
+		case "^^edit":
+			fmt.Printf("stubbed :(\n")
+			continue
+
+		default:
+			_, err = dg.ChannelMessageSend(channel.ID, content)
+			if err != nil {
+
+				fmt.Printf("[err]: unable to send your message... (continuing anyways)\n")
+				fmt.Printf("       %v\n", err)
+
+			}
+
+		}
+
+	}
+
+}
+
 // lists messages in the current channel
 func listMessages(args []string) {
 
