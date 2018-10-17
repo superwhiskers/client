@@ -25,7 +25,11 @@ func showHelp() {
 // lists messages in the current channel
 func listMessages(args []string) {
 
-	var count int
+	var (
+		count int
+		get int
+	)
+
 	if len(args) > 0 {
 
 		count, err = strconv.Atoi(args[0])
@@ -42,12 +46,46 @@ func listMessages(args []string) {
 
 	}
 
-	messages, err := dg.ChannelMessages(channel.ID, count, "", "", "")
-	if err != nil {
+	var (
+		messages []*discordgo.Message
+		tmpMessages []*discordgo.Message
+		before string
+	)
 
-		fmt.Printf("[err]: unable to get messages... (continuing anyways)\n")
-		fmt.Printf("       %v\n", err)
-		return
+	for count != 0 {
+
+		if count < 100 {
+
+			get = count
+			count = 0
+
+		} else {
+
+			get = 100
+			count -= 100
+
+		}
+
+		if len(messages) == 0 {
+
+			before = ""
+
+		} else {
+
+			before = messages[len(messages) - 1].ID
+
+		}
+
+		tmpMessages, err = dg.ChannelMessages(channel.ID, get, before, "", "")
+		if err != nil {
+
+			fmt.Printf("[err]: unable to get messages... (continuing anyways)\n")
+			fmt.Printf("       %v\n", err)
+			return
+
+		}
+
+		messages = append(messages, tmpMessages...)
 
 	}
 
