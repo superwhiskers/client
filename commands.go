@@ -11,8 +11,10 @@ import (
 	// internals
 	"fmt"
 	"strconv"
+	"time"
 	// externals
 	"github.com/bwmarrin/discordgo"
+	"github.com/xeonx/timeago"
 )
 
 // show help message
@@ -127,12 +129,16 @@ func listMessages(args []string) {
 
 	}
 
-	var m *discordgo.Message
+	var (
+		m *discordgo.Message
+		time time.Time
+	)
 	for i := range messages {
 
 		m = messages[len(messages)-1-i]
+		time, _ = m.Timestamp.Parse()
 
-		fmt.Printf("%s: %s\n", m.Author.String(), m.Content)
+		fmt.Printf("%s (%s) posted %s: %s\n", m.Author.String(), m.Author.ID, timeago.English.Format(time), m.Content)
 		if len(m.Attachments) > 0 {
 
 			fmt.Printf("attachments (%d):\n", len(m.Attachments))
@@ -299,3 +305,6 @@ func changeChannel(force bool) bool {
 	}
 
 }
+
+// command that displays information about a user
+// TODO: actually make this
