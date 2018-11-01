@@ -138,7 +138,7 @@ func listMessages(args []string) {
 		m = messages[len(messages)-1-i]
 		time, _ = m.Timestamp.Parse()
 
-		fmt.Printf("%s (%s) posted %s: %s\n", m.Author.String(), m.Author.ID, timeago.English.Format(time), m.Content)
+		fmt.Printf("%s (%s) posted %s in #%s with the id of %s:\n    %s\n", m.Author.String(), m.Author.ID, timeago.English.Format(time), channel.Name, m.ID, m.Content)
 		if len(m.Attachments) > 0 {
 
 			fmt.Printf("attachments (%d):\n", len(m.Attachments))
@@ -301,6 +301,18 @@ func changeChannel(force bool) bool {
 		}
 
 		return true
+
+	}
+
+}
+
+// delete a message
+func deleteMessage(args []string) {
+
+	err = dg.ChannelMessageDelete(channel.ID, args[0])
+	if err != nil {
+
+		fmt.Printf("%s is not a valid message id\n", args[0])
 
 	}
 

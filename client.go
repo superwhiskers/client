@@ -171,6 +171,9 @@ func main() {
 		case "send":
 			sendMessage()
 
+		case "delete":
+			deleteMessage(args)
+
 		//case "pwd":
 		//	listWorkingDirectory()
 
