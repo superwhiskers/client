@@ -30,6 +30,7 @@ var (
 	user     *discordgo.User
 	dg       *discordgo.Session
 
+	dm       bool
 	err      error
 
 	reader = bufio.NewReader(os.Stdin)

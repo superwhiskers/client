@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+	"strings"
 	// externals
 	"github.com/bwmarrin/discordgo"
 	"github.com/xeonx/timeago"
@@ -27,10 +28,28 @@ func showHelp() {
 // sends message(s)
 func sendMessage() {
 
+	var channelName string
+	if dm == true {
+
+		recipientNames := []string{}
+		for _, recipient := range channel.Recipients {
+
+			recipientNames = append(recipientNames, recipient.Username)
+
+		}
+
+		channelName = fmt.Sprintf("to %s", strings.Join(recipientNames, ", "))
+
+	} else {
+
+		channelName = fmt.Sprintf("in #%s", channel.Name)
+
+	}
+
 	var content string
 	for {
 
-		content = question(fmt.Sprintf("what would you like to say in #%s?\n(type ^^exit to exit, ^^help to show help)", channel.Name), []string{})
+		content = question(fmt.Sprintf("what would you like to say %s?\n(type ^^exit to exit, ^^help to show help)", channelName), []string{})
 
 		switch content {
 
@@ -129,6 +148,24 @@ func listMessages(args []string) {
 
 	}
 
+	var channelName string
+	if dm == true {
+
+		recipientNames := []string{}
+		for _, recipient := range channel.Recipients {
+
+			recipientNames = append(recipientNames, recipient.Username)
+
+		}
+
+		channelName = strings.Join(recipientNames, ", ")
+
+	} else {
+
+		channelName = fmt.Sprintf("#%s", channel.Name)
+
+	}
+
 	var (
 		m *discordgo.Message
 		time time.Time
@@ -138,7 +175,7 @@ func listMessages(args []string) {
 		m = messages[len(messages)-1-i]
 		time, _ = m.Timestamp.Parse()
 
-		fmt.Printf("%s (%s) posted %s in #%s with the id of %s:\n    %s\n", m.Author.String(), m.Author.ID, timeago.English.Format(time), channel.Name, m.ID, m.Content)
+		fmt.Printf("%s (%s) posted %s in %s with the id of %s:\n    %s\n", m.Author.String(), m.Author.ID, timeago.English.Format(time), channelName, m.ID, m.Content)
 		if len(m.Attachments) > 0 {
 
 			fmt.Printf("attachments (%d):\n", len(m.Attachments))
@@ -167,10 +204,23 @@ func changeServer(force bool) bool {
 		fmt.Printf("%d: %s\n", i, s.Name)
 
 	}
+	fmt.Printf("dm: dm channels\n")
 
 	for {
 
 		serverIndStr := question("select a server", []string{})
+
+
+		if serverIndStr == "dm" {
+
+			dm = true
+			break
+
+		} else {
+
+			dm = false
+
+		}
 
 		serverIndInt, err := strconv.Atoi(serverIndStr)
 		if err != nil {
@@ -212,12 +262,36 @@ func changeServer(force bool) bool {
 
 	}
 
-	channels = []*discordgo.Channel{}
-	for _, c := range server.Channels {
+	if dm != true {
 
-		if c.Type == discordgo.ChannelTypeGuildText {
+		channels = []*discordgo.Channel{}
+		for _, c := range server.Channels {
 
-			channels = append(channels, c)
+			if c.Type == discordgo.ChannelTypeGuildText {
+
+				channels = append(channels, c)
+
+			}
+
+		}
+
+	} else {
+
+		channels, err = dg.UserChannels()
+		if err != nil {
+
+			fmt.Printf("[err]: unable to output dm channels... (continuing anyways)\n")
+			fmt.Printf("       %v\n", err)
+
+			if force != true {
+
+				return false
+
+			} else {
+
+				return changeServer(true)
+
+			}
 
 		}
 
@@ -237,25 +311,45 @@ func changeServer(force bool) bool {
 // change current channel
 func changeChannel(force bool) bool {
 
-	var p *discordgo.Channel
-	for i, c := range channels {
+	if dm != true {
 
-		if c.ParentID == "" {
+		var p *discordgo.Channel
+		for i, c := range channels {
 
-			fmt.Printf("%d: #%s\n", i, c.Name)
+			if c.ParentID == "" {
 
-		} else {
-
-			p, err = dg.Channel(c.ParentID)
-			if err != nil {
-
-				fmt.Printf("%d: #%s (unknown)\n", i, c.Name)
+				fmt.Printf("%d: #%s\n", i, c.Name)
 
 			} else {
 
-				fmt.Printf("%d: #%s (%s)\n", i, c.Name, p.Name)
+				p, err = dg.Channel(c.ParentID)
+				if err != nil {
+
+					fmt.Printf("%d: #%s (unknown)\n", i, c.Name)
+
+				} else {
+
+					fmt.Printf("%d: #%s (%s)\n", i, c.Name, p.Name)
+
+				}
 
 			}
+
+		}
+
+	} else {
+
+		var recipientNames []string
+		for i, c := range channels {
+
+			recipientNames = []string{}
+			for _, recipient := range c.Recipients {
+
+				recipientNames = append(recipientNames, recipient.Username)
+
+			}
+
+			fmt.Printf("%d: %s\n", i, strings.Join(recipientNames, ", "))
 
 		}
 
@@ -308,6 +402,12 @@ func changeChannel(force bool) bool {
 
 // delete a message
 func deleteMessage(args []string) {
+
+	if len(args) == 0 {
+
+		return
+
+	}
 
 	err = dg.ChannelMessageDelete(channel.ID, args[0])
 	if err != nil {
