@@ -181,6 +181,9 @@ func main() {
 		case "move-serv":
 			_ = changeServer(false)
 
+		case "whois":
+			whois(args)
+
 		case "move-chan":
 			_ = changeChannel(false)
 

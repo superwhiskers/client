@@ -419,4 +419,64 @@ func deleteMessage(args []string) {
 }
 
 // command that displays information about a user
-// TODO: actually make this
+func whois(args []string) {
+
+	if dm == true {
+
+		fmt.Printf("whois doesn't work in dm channels\n")
+		return
+
+	}
+
+	var userID string
+	if len(args) == 0 {
+
+		userID = user.ID
+
+	} else {
+
+		userID = args[0]
+
+	}
+
+	member, err := dg.GuildMember(server.ID, userID)
+	if err != nil {
+
+		fmt.Printf("%s is not a valid user id to look up\n", userID)
+		return
+
+	}
+
+	roles, err := dg.GuildRoles(server.ID)
+	if err != nil {
+
+		fmt.Printf("[err]: could not get the guild's roles... (continuing anyways)")
+		fmt.Printf("       %v\n", err)
+		return
+
+	}
+
+	var roleNames []string
+	for _, roleID := range member.Roles {
+
+		for _, role := range roles {
+
+			if role.ID == roleID {
+
+				roleNames = append(roleNames, role.Name)
+
+			}
+
+		}
+
+	}
+
+	fmt.Printf("\n")
+	fmt.Printf("showing user information for %s\n", member.User.String())
+	fmt.Printf("id: %s\n", member.User.ID)
+	fmt.Printf("roles: %s\n", strings.Join(roleNames, ", "))
+	fmt.Printf("bot: %t\n", member.User.Bot)
+	fmt.Printf("avatar url: %s\n", member.User.AvatarURL(""))
+	fmt.Printf("\n")
+
+}

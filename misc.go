@@ -20,6 +20,7 @@ pwd         - shows information about the current selection
 move-serv   - changes the selected server
 move-chan   - changes the selected channel
 exit        - exit the client
+whois <id>  - look up the information of a user by id. if 'id' is not provided, it shows yours 
 
 `
 
