@@ -124,7 +124,7 @@ func main() {
 
 	fmt.Printf("\rwaiting for ready event... done\n")
 
-	_ = changeServer(true)
+	changeServer(true)
 
 	fmt.Printf("client.go | version one and a half alpha\n")
 	fmt.Printf("logged in as %s\n", user.String())
@@ -163,7 +163,7 @@ func main() {
 		switch cmdSlice[0] {
 
 		case "exit":
-			_ = dg.Close()
+			dg.Close()
 			os.Exit(0)
 
 		case "ls":
@@ -179,13 +179,13 @@ func main() {
 		//	listWorkingDirectory()
 
 		case "move-serv":
-			_ = changeServer(false)
+			changeServer(false)
 
 		case "whois":
 			whois(args)
 
 		case "move-chan":
-			_ = changeChannel(false)
+			changeChannel(false)
 
 		case "help":
 			showHelp()
