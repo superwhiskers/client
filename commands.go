@@ -190,6 +190,52 @@ func listMessages(args []string) {
 
 		}
 
+		if len(m.Embeds) > 0 {
+
+			fmt.Printf("embeds (%d):\n", len(m.Embeds))
+
+			for _, e := range m.Embeds {
+
+				if e.Title != "" {
+
+					fmt.Printf("  %s\n", e.Title)
+
+				}
+				if e.Description != "" {
+
+					fmt.Printf("  %s\n", e.Description)
+
+				}
+				if e.Author != nil {
+
+					fmt.Printf("  author: %s", e.Author.Name)
+
+				}
+				fmt.Printf("  fields (%d):\n", len(e.Fields))
+				for _, f := range e.Fields {
+
+					if f.Inline == true {
+
+						fmt.Printf("    (%s) %s\n", f.Name, f.Value)
+
+					} else {
+
+						fmt.Printf("    (%s)\n", f.Name)
+						fmt.Printf("    %s\n", f.Value)
+
+					}
+
+				}
+				if e.Footer != nil {
+
+					fmt.Printf("  footer: %s\n", e.Footer.Text)
+
+				}
+
+			}
+
+		}
+
 	}
 
 }
